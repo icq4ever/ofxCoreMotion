@@ -1,1 +1,2 @@
 ofxCoreMotion
+ofxOsc
