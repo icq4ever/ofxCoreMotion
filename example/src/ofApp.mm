@@ -61,7 +61,9 @@ void ofApp::draw(){
 	float angle;
 	ofVec3f axis;//(0,0,1.0f);
 	quat.getRotate(angle, axis);
-	ofRotate(angle, axis.x, -axis.y, axis.z); // rotate with quaternion
+	
+	//	disable rotation
+//	ofRotate(angle, axis.x, -axis.y, axis.z); // rotate with quaternion
 	
 	// 2) rotate by multiplying matrix directly
 	//    ofMatrix4x4 mat = coreMotion.getRotationMatrix();
@@ -78,7 +80,7 @@ void ofApp::draw(){
 		for(int j=-numberOfDepthScene; j<numberOfDepthScene; j++){
 			for(int k=-numberOfDepthScene; k<numberOfDepthScene; k++){
 //				ofDrawBox(i*100, j*100, k*100, 10); // OF 0.74: ofBox(0, 0, 0, 220);
-				ofDrawBox(i*300, j*300, k*300, 5);
+				ofDrawBox(i*500, j*500, k*500, 5);
 				ofDrawAxis(10);
 			}
 		}
