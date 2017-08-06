@@ -74,10 +74,11 @@ void ofApp::draw(){
 	//    ofRotateZ( ofRadToDeg( coreMotion.getYaw() ) );
 	
 	ofNoFill();
-	for(int i=-3; i<3; i++){
-		for(int j=-3; j<3; j++){
-			for(int k=-3; k<3; k++){
-				ofDrawBox(i*100, j*100, k*100, 80); // OF 0.74: ofBox(0, 0, 0, 220);
+	for(int i=-numberOfDepthScene; i<numberOfDepthScene; i++){
+		for(int j=-numberOfDepthScene; j<numberOfDepthScene; j++){
+			for(int k=-numberOfDepthScene; k<numberOfDepthScene; k++){
+//				ofDrawBox(i*100, j*100, k*100, 10); // OF 0.74: ofBox(0, 0, 0, 220);
+				ofDrawBox(i*300, j*300, k*300, 5);
 				ofDrawAxis(10);
 			}
 		}
@@ -330,30 +331,33 @@ void ofApp::dododo(){
 	
 	
 //	if(method01){
-		// Newton - D'Lambery physics for no relativistic speeds dictates
-		// speed = lastSpeed + (currentAcceleration + lastAcceleration)/2 * INTERVAL
-		// 적분 : 속도 = 이전속도 + 가속도 평균 * 시간차
-		speed.x = lastSpeed.x + (linearAccel.x + lastLinearAccel.x)/2 * 1/100;
-		speed.y = lastSpeed.y + (linearAccel.y + lastLinearAccel.y)/2 * 1/100;
-		speed.z = lastSpeed.z + (linearAccel.z + lastLinearAccel.z)/2 * 1/100;
-		
-		
-		// location = lastLocation + (currentSpeed + lastSpeed)/2 * INTERVAL
-		// 적분 : 거리 = 이전거리 + 속도 평균 * 시간차
-		distance.x = lastDistance.x + (speed.x + lastSpeed.x)/2 * 1/100;
-		distance.y = lastDistance.y + (speed.y + lastSpeed.y)/2 * 1/100;
-		distance.z = lastDistance.z + (speed.z + lastSpeed.z)/2 * 1/100;
-//	}
-//	else {
-//		speed.x = lastSpeed.x + lastLinearAccel.x + (linearAccel.x - lastLinearAccel.x)/2 * 1/100;
-//		speed.y = lastSpeed.y + lastLinearAccel.y + (linearAccel.y - lastLinearAccel.y)/2 * 1/100;
-//		speed.z = lastSpeed.z + lastLinearAccel.z + (linearAccel.z - lastLinearAccel.z)/2 * 1/100;
+//		// Newton - D'Lambery physics for no relativistic speeds dictates
+//		// speed = lastSpeed + (currentAcceleration + lastAcceleration)/2 * INTERVAL
+//		// 적분 : 속도 = 이전속도 + 가속도 평균 * 시간차
+//		speed.x = lastSpeed.x + (linearAccel.x + lastLinearAccel.x)/2 * 1/100;
+//		speed.y = lastSpeed.y + (linearAccel.y + lastLinearAccel.y)/2 * 1/100;
+//		speed.z = lastSpeed.z + (linearAccel.z + lastLinearAccel.z)/2 * 1/100;
 //		
 //		
 //		// location = lastLocation + (currentSpeed + lastSpeed)/2 * INTERVAL
-//		distance.x = lastDistance.x + lastSpeed.x + (speed.x - lastSpeed.x)/2 * 1/100;
-//		distance.y = lastDistance.y + lastSpeed.y + (speed.y - lastSpeed.y)/2 * 1/100;
-//		distance.z = lastDistance.z + lastSpeed.z + (speed.z - lastSpeed.z)/2 * 1/100;
+//		// 적분 : 거리 = 이전거리 + 속도 평균 * 시간차
+//		distance.x = lastDistance.x + (speed.x + lastSpeed.x)/2 * 1/100;
+//		distance.y = lastDistance.y + (speed.y + lastSpeed.y)/2 * 1/100;
+//		distance.z = lastDistance.z + (speed.z + lastSpeed.z)/2 * 1/100;
+//	}
+//	else {
+
+	
+		// 적분 : 속도 = 이전속도 + 가속도 평균 * 시간차
+		speed.x = lastSpeed.x + lastLinearAccel.x + (linearAccel.x - lastLinearAccel.x)/2 * 1/100;
+		speed.y = lastSpeed.y + lastLinearAccel.y + (linearAccel.y - lastLinearAccel.y)/2 * 1/100;
+		speed.z = lastSpeed.z + lastLinearAccel.z + (linearAccel.z - lastLinearAccel.z)/2 * 1/100;
+		
+		// 적분 : 거리 = 이전거리 + 속도 평균 * 시간차
+		// location = lastLocation + (currentSpeed + lastSpeed)/2 * INTERVAL
+		distance.x = lastDistance.x + lastSpeed.x + (speed.x - lastSpeed.x)/2 * 1/100;
+		distance.y = lastDistance.y + lastSpeed.y + (speed.y - lastSpeed.y)/2 * 1/100;
+		distance.z = lastDistance.z + lastSpeed.z + (speed.z - lastSpeed.z)/2 * 1/100;
 //	}
 
 	

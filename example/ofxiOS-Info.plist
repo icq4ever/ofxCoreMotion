@@ -42,7 +42,7 @@
 	<key>NSLocationUsageDescription</key>
 	<string></string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>NSLocationWhenInUseUsageDescription</string>
 	<key>UIApplicationExitsOnSuspend</key>
 	<true/>
 	<key>UIStatusBarHidden</key>

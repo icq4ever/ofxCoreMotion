@@ -41,6 +41,8 @@ public:
 	bool hasCompass;
 	bool hasGPS;
 	
+	int numberOfDepthScene = 5;
+	
 	ofVec3f linearAccel;
 	ofVec3f lastLinearAccel;
 	ofVec3f lastAccel;
