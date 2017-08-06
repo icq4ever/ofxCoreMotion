@@ -1,4 +1,12 @@
 ![https://github.com/trentbrooks/ofxCoreMotion/raw/master/screenshot.png](https://github.com/trentbrooks/ofxCoreMotion/raw/master/screenshot.png)
+
+### get openFrameworks for iOS
+[download](http://openframeworks.cc/versions/v0.9.8/of_v0.9.8_ios_release.zip)<br/>
+[설치가이드/installtion guide](http://openframeworks.cc/ko/setup/iphone/)
+
+### installtion this addon
+clone to `_oF_iOS_/addons`.<br/> result directory is `_oF_iOS_/addons/ofxCoreMotion`
+
 ## ofxCoreMotion ##
 Openframeworks/ios addon (tested with OF 0.9.0, Xcode 7.1, ios 9.1) for the Core Motion Framework- http://developer.apple.com/library/ios/#documentation/CoreMotion/Reference/CoreMotion_Reference/_index.html
 
