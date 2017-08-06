@@ -5,12 +5,18 @@ void ofApp::setup(){
 
     ofSetFrameRate(60);
     ofBackground(255, 255, 0);
-    
+	
 
     coreMotion.setupMagnetometer();
     coreMotion.setupGyroscope();
     coreMotion.setupAccelerometer();
     coreMotion.setupAttitude(CMAttitudeReferenceFrameXMagneticNorthZVertical);
+	
+	coreLocation = new ofxiOSCoreLocation();
+	hasCompass = coreLocation->startHeading();
+	hasGPS = coreLocation->startLocation();
+	
+	heading = 0.0;
 	
 	lastTickedTimer = ofGetElapsedTimeMillis();
 	
@@ -26,12 +32,15 @@ void ofApp::update(){
 		lastTickedTimer = ofGetElapsedTimeMillis();
 	}
 	
+	// mobile이므로, 휴면상태에 빠지지 않도록 1초마다 한번 hearbeat신호를 보낸다.
 	if(ofGetFrameNum() % 120 == 0){
 		ofxOscMessage m;
 		m.setAddress("/misc/heartbeat");
 		m.addIntArg(ofGetFrameNum());
 		sender.sendMessage(m);
 	}
+	
+	heading = ofLerpDegrees(heading, -coreLocation->getTrueHeading(), 0.7);
 	
 }
 
@@ -78,6 +87,9 @@ void ofApp::draw(){
 	ofPopMatrix();
 	ofPopMatrix();
 
+	
+	
+	/////////////////////////////////////////  화면출력 및 osc 메시지
 	
     // attitude- quaternion
     ofDrawBitmapStringHighlight("Attitude: (quaternion x,y,z,w)", 20, 25);
@@ -140,9 +152,9 @@ void ofApp::draw(){
 	accelerometer.addStringArg(ofToString(a.y, 3));
 	accelerometer.addStringArg(ofToString(a.z, 3));
 	
-	linearAccelerometer.addStringArg(ofToString(a.x-gr.x, 3));
-	linearAccelerometer.addStringArg(ofToString(a.y-gr.y, 3));
-	linearAccelerometer.addStringArg(ofToString(a.z-gr.z, 3));
+	linearAccelerometer.addStringArg(ofToString(linearAccel.x, 3));
+	linearAccelerometer.addStringArg(ofToString(linearAccel.y, 3));
+	linearAccelerometer.addStringArg(ofToString(linearAccel.z, 3));
 	
 	sender.sendMessage(accelerometer);
 	sender.sendMessage(linearAccelerometer);
@@ -242,52 +254,111 @@ void ofApp::draw(){
 	
 	
 	
+	// GPS 정보 출력
+	if(hasGPS){
+		ofDrawBitmapStringHighlight("LAT : " + ofToString(coreLocation->getLatitude()), 20, 425, ofColor::cyan, ofColor::black);
+		ofDrawBitmapStringHighlight("LON : " + ofToString(coreLocation->getLongitude()), ofGetWidth()/2+20, 425, ofColor::cyan, ofColor::black);
+		gpsLatitude = coreLocation->getLatitude();
+		gpsLongitude = coreLocation->getLongitude();
+		
+		
+		// GPS 정보를 OSC로 전달
+		ofxOscMessage gpsLocation;
+		gpsLocation.setAddress("/status/gpsLocation");
+		gpsLocation.addStringArg(ofToString(gpsLatitude));
+		gpsLocation.addStringArg(ofToString(gpsLongitude));
+		
+		sender.sendMessage(gpsLocation);
+	}
+	
+//	if(method01)	{
+//		ofDrawBitmapStringHighlight("2nd", ofGetWidth()-40, ofGetHeight()-40, ofColor::magenta, ofColor::white);
+//	} else {
+//		ofDrawBitmapStringHighlight("1st", ofGetWidth() - 40, ofGetHeight()-40, ofColor::magenta, ofColor::white);
+//	}
+	
+	// instruction text
     ofFill();
     ofDrawBitmapStringHighlight(ofToString("Double tap to reset \nAttitude reference frame"), 20, ofGetHeight() - 50, ofColor::yellow, ofColor::black);
 }
 
+
+// update() 에서 매번 업데이트됨.
 void ofApp::dododo(){
-//	ofVec3f speed;
-//	ofVec3f distance;
+	
+	// 변수 설명
+	// accel		: raw 가속도계
+	// linearAccel  : (raw 가속도 - 중력가속도) -> 필터링된 가속도계
+	
+	// 가속도, 자이로, 중력값을 얻어와 vector3으로 얻어온다.
+	// ofVec3f linearAccel : 전역 변수로 적용됨.
 	ofVec3f accel = coreMotion.getAccelerometerData();
 	ofVec3f gyro = coreMotion.getGyroscopeData();
-//	ofVec3f magneto = coreMotion.getMagnetometerData();
 	ofVec3f gravity = coreMotion.getGravity();
-//	ofVec3f angle = coreMotion.get
 	
 	
-	// remove acceleration from gravity
-	accel = accel - gravity;
-//	accel.z -= (abs(gyro.y) - abs(lastGyro.y));
+	// 가속도계에서 중력 벡터를 제거한다.
 	
-	// filtering
-	if(abs(accel.x) < 0.1 ) accel.x = 0;
-	if(abs(accel.y) < 0.1 ) accel.y = 0;
-	if(abs(accel.z) < 0.1 ) accel.z = 0;
+	linearAccel = accel - gravity;
 	
-	accel.x == 0 ? countx++ : countx = 0;
-	accel.y == 0 ? county++ : county = 0;
-	accel.z == 0 ? countz++ : countz = 0;
+	//*******************************************************************************  필터링
+	// 가속도계의 변화가 미비할경우 (폰이 고정되어있을 때), 가속도를 0으로 무시한다.
+	if(abs(linearAccel.x) < 0.1 ) linearAccel.x = 0;
+	if(abs(linearAccel.y) < 0.1 ) linearAccel.y = 0;
+	if(abs(linearAccel.z) < 0.1 ) linearAccel.z = 0;
 	
+	// 지속적으로 폰이 고정되어있다고 판단되면, 카운트를 증가시키는데..
+	linearAccel.x == 0 ? countx++ : countx = 0;
+	linearAccel.y == 0 ? county++ : county = 0;
+	linearAccel.z == 0 ? countz++ : countz = 0;
 	
+	// 20번이상 고정되어있다 판단되면, 속도를 0으로 바꾼다.
 	if(countx>=20)	{ speed.x = 0; lastSpeed.x = 0;}
 	if(county>=20)	{ speed.y = 0; lastSpeed.y = 0;}
 	if(countz>=20)	{ speed.z = 0; lastSpeed.z = 0;}
 	
 	
-	// Newton - D'Lambery physics for no relativistic speeds dictates
-	// speed = lastSpeed + (currentAcceleration - lastAcceleration)/2 * INTERVAL
-	speed.x = lastSpeed.x + lastAccel.x + (accel.x - lastAccel.x)/2 * 1/100;
-	speed.y = lastSpeed.y + lastAccel.y + (accel.y - lastAccel.y)/2 * 1/100;
-	speed.z = lastSpeed.z + lastAccel.z + (accel.z - lastAccel.z)/2 * 1/100;
+	// 자이로의 값이 클경우에는 가속도, 속도를 0으로 무시한다
+	if(abs(gyro.x) > 1 || abs(gyro.y) > 1 || abs(gyro.z) > 1){
+		linearAccel.x = 0;
+		speed.x = 0;
+		linearAccel.y = 0;
+		speed.y = 0;
+		linearAccel.z = 0;
+		speed.z = 0;
+	}
 	
 	
-	// location = lastLocation + (currentSpeed - lastSpeed)/2 * INTERVAL
-	distance.x = lastDistance.x + lastSpeed.x + (speed.x - lastSpeed.x)/2 * 1/100;
-	distance.y = lastDistance.y + lastSpeed.y + (speed.y - lastSpeed.y)/2 * 1/100;
-	distance.z = lastDistance.z + lastSpeed.z + (speed.z - lastSpeed.z)/2 * 1/100;
+//	if(method01){
+		// Newton - D'Lambery physics for no relativistic speeds dictates
+		// speed = lastSpeed + (currentAcceleration + lastAcceleration)/2 * INTERVAL
+		// 적분 : 속도 = 이전속도 + 가속도 평균 * 시간차
+		speed.x = lastSpeed.x + (linearAccel.x + lastLinearAccel.x)/2 * 1/100;
+		speed.y = lastSpeed.y + (linearAccel.y + lastLinearAccel.y)/2 * 1/100;
+		speed.z = lastSpeed.z + (linearAccel.z + lastLinearAccel.z)/2 * 1/100;
+		
+		
+		// location = lastLocation + (currentSpeed + lastSpeed)/2 * INTERVAL
+		// 적분 : 거리 = 이전거리 + 속도 평균 * 시간차
+		distance.x = lastDistance.x + (speed.x + lastSpeed.x)/2 * 1/100;
+		distance.y = lastDistance.y + (speed.y + lastSpeed.y)/2 * 1/100;
+		distance.z = lastDistance.z + (speed.z + lastSpeed.z)/2 * 1/100;
+//	}
+//	else {
+//		speed.x = lastSpeed.x + lastLinearAccel.x + (linearAccel.x - lastLinearAccel.x)/2 * 1/100;
+//		speed.y = lastSpeed.y + lastLinearAccel.y + (linearAccel.y - lastLinearAccel.y)/2 * 1/100;
+//		speed.z = lastSpeed.z + lastLinearAccel.z + (linearAccel.z - lastLinearAccel.z)/2 * 1/100;
+//		
+//		
+//		// location = lastLocation + (currentSpeed + lastSpeed)/2 * INTERVAL
+//		distance.x = lastDistance.x + lastSpeed.x + (speed.x - lastSpeed.x)/2 * 1/100;
+//		distance.y = lastDistance.y + lastSpeed.y + (speed.y - lastSpeed.y)/2 * 1/100;
+//		distance.z = lastDistance.z + lastSpeed.z + (speed.z - lastSpeed.z)/2 * 1/100;
+//	}
 
+	
 	lastAccel = accel;
+	lastLinearAccel = linearAccel;
 	lastSpeed = speed;
 	lastDistance = distance;
 	lastGyro = gyro;
@@ -302,6 +373,7 @@ void ofApp::touchMoved(ofTouchEventArgs & touch){ }
 //--------------------------------------------------------------
 void ofApp::touchUp(ofTouchEventArgs & touch){ }
 //--------------------------------------------------------------
+// 더블탭을 할 경우..
 void ofApp::touchDoubleTap(ofTouchEventArgs & touch){
     // resets attitude to current
     coreMotion.resetAttitude();
@@ -310,6 +382,8 @@ void ofApp::touchDoubleTap(ofTouchEventArgs & touch){
 	lastSpeed = ofVec3f(0,0,0);
 	distance = ofVec3f(0, 0, 0);
 	lastDistance = ofVec3f(0,0,0);
+	
+//	method01 = !method01;
 }
 
 
