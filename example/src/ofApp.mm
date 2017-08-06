@@ -53,10 +53,19 @@ void ofApp::draw(){
 	ofVec3f m = coreMotion.getMagnetometerData();
 	
 	ofPushMatrix();
+//	ofDrawLine(0, 0, 0, heading.x*100, heading.y*100, heading.z*100);
 	ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
 	
+	
+//	ofRotateY(heading);
+//	ofSetHexColor(0x00FFFF);
+//	ofDrawLine(0, 0, 0, 0, 0, 100);
+	
 	ofPushMatrix();
-	ofTranslate(-distance);
+	// remove x,y
+	ofTranslate(0,0,-distance.z);
+//	ofTranslate(-distance);
+	
 	// 1) quaternion rotations
 	float angle;
 	ofVec3f axis;//(0,0,1.0f);
@@ -80,7 +89,7 @@ void ofApp::draw(){
 		for(int j=-numberOfDepthScene; j<numberOfDepthScene; j++){
 			for(int k=-numberOfDepthScene; k<numberOfDepthScene; k++){
 //				ofDrawBox(i*100, j*100, k*100, 10); // OF 0.74: ofBox(0, 0, 0, 220);
-				ofDrawBox(i*500, j*500, k*500, 5);
+				ofDrawBox(i*500, j*500, k*500, 20);
 				ofDrawAxis(10);
 			}
 		}
@@ -236,7 +245,7 @@ void ofApp::draw(){
 	distance.y < 0 ? dY = ofToString(distance.y,3) : dY = " " + ofToString(distance.y,3);
 	distance.z < 0 ? dZ = ofToString(distance.z,3) : dZ = " " + ofToString(distance.z,3);
 	
-	ofDrawBitmapStringHighlight(dX, 20, 400, ofColor::yellow, ofColor::black);
+	ofDrawBitmapStringHighlight(dX,  20, 400, ofColor::yellow, ofColor::black);
 	ofDrawBitmapStringHighlight(dY, 120, 400, ofColor::yellow, ofColor::black);
 	ofDrawBitmapStringHighlight(dZ, 220, 400, ofColor::yellow, ofColor::black);
 	

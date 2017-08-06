@@ -5,8 +5,8 @@
 #include "ofxiOSCoreLocation.h"
 #include "ofxOSC.h"
 
-//#define HOST "192.168.100.12"
-#define HOST "192.168.0.11"			// 프로세싱앱이 실행되는 머신의 ip주소로 변경해줍니다. 아이폰과 실행되는 머신은 같은 공유기 혹은 라우터에 물려있어야 합니다.
+#define HOST "192.168.100.12"
+//#define HOST "192.168.0.11"			// 프로세싱앱이 실행되는 머신의 ip주소로 변경해줍니다. 아이폰과 실행되는 머신은 같은 공유기 혹은 라우터에 물려있어야 합니다.
 #define PORT 12345					// osc 포트주소는 12345
 
 
